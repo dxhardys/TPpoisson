@@ -59,10 +59,17 @@ int v = *kv ;
     AB[k+v+2]=0.0; //On met les élement de la sousdiagonale a 0.0
   }
   AB[1] = 0.0; // deuxieme élément de la matrice a 0
-  AB[n*m-1] = 0.0 ; //dernier élement a 0 
+  AB[n*m-1] = 0.0 ; //dernier élement a 0
 }
 
 void set_dense_RHS_DBC_1D(double* RHS, int* la, double* BC0, double* BC1){
+  int m = *la ;
+  // On met les élement (entre premier et dernier) du vecteur RHS a 0
+  for (int i = 0 ; i < m ;++i){
+    RHS[i] = 0.0 ;
+  }
+  RHS[0] = *BC0 ; //on met la premiere valeur du vecteur RHS a la valeur BC0
+  RHS[m-1] = *BC1 ; // on met la derniere valeur du vecteur RHS a la valeur BC1
 }  
 
 void set_analytical_solution_DBC_1D(double* EX_SOL, double* X, int* la, double* BC0, double* BC1){
