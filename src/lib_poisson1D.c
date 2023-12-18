@@ -6,6 +6,37 @@
 #include "lib_poisson1D.h"
 
 void set_GB_operator_colMajor_poisson1D(double* AB, int *lab, int *la, int *kv){
+
+
+int k = 0;
+int j = 0;
+int m = *la ;
+int n = *lab ;
+int v = *kv ;
+
+// On parcours les colonne de la matrice 
+for(int i = 0; i<m;++i){
+  k=i*n;
+  if(v >= 0 ){
+    for(int j = 0 ; j< v ; ++j){
+      AB[k+j] =0.0;
+    }
+  }
+
+  AB[k+v]=-1.0; // On met les élements de la surdiagonale à -1.0
+  AB[k+v+1]= 2.0; // On met les éléments de la diagonale principale a 2.0
+  AB[k+v+2]=-1.0; // On met les éléments de la sous diagonale a -1.0
+
+}
+
+// On remplit le reste de la matrice avec des 0
+AB[0] = 0.0;
+  if(v == 1){
+    AB[1]=0 ;
+  }
+AB[n*m-1]=0.0;
+
+    
 }
 
 void set_GB_operator_colMajor_poisson1D_Id(double* AB, int *lab, int *la, int *kv){
