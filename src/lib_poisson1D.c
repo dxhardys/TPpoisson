@@ -63,6 +63,7 @@ int v = *kv ;
 }
 
 void set_dense_RHS_DBC_1D(double* RHS, int* la, double* BC0, double* BC1){
+  
   int m = *la ;
   // On met les élement (entre premier et dernier) du vecteur RHS a 0
   for (int i = 0 ; i < m ;++i){
@@ -70,9 +71,16 @@ void set_dense_RHS_DBC_1D(double* RHS, int* la, double* BC0, double* BC1){
   }
   RHS[0] = *BC0 ; //on met la premiere valeur du vecteur RHS a la valeur BC0
   RHS[m-1] = *BC1 ; // on met la derniere valeur du vecteur RHS a la valeur BC1
+
 }  
 
 void set_analytical_solution_DBC_1D(double* EX_SOL, double* X, int* la, double* BC0, double* BC1){
+  int m = *la ;
+  double d = (*BC1)-(*BC0); // calcul du delta 
+  //calcul de la solution analytique
+  for(int i = 0 ; i < m ;++i){
+    EX_SOL[i] = *BC0 + X[i] * d ;
+  }
 }  
 
 void set_grid_points_1D(double* x, int* la){
