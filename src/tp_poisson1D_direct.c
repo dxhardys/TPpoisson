@@ -62,9 +62,9 @@ int main(int argc,char *argv[])
   dgbtrf_(&la, &la, &kl, &ku, AB, &lab, ipiv, &info);
 
   /* LU for tridiagonal matrix  (can replace dgbtrf_) */
-  // ierr = dgbtrftridiag(&la, &la, &kl, &ku, AB, &lab, ipiv, &info);
+  ierr = dgbtrftridiag(&la, &la, &kl, &ku, AB, &lab, ipiv, &info);
 
-  // write_GB_operator_colMajor_poisson1D(AB, &lab, &la, "LU.dat");
+  write_GB_operator_colMajor_poisson1D(AB, &lab, &la, "LU.dat");
   
   /* Solution (Triangular) */
   if (info==0){
@@ -76,6 +76,7 @@ int main(int argc,char *argv[])
 
   /* It can also be solved with dgbsv */
   // TODO : use dgbsv
+  dgbsv_("N",&la,&kl,&ku,&NRHS,AB,&lab,ipiv,RHS,&la);
 
   write_xy(RHS, X, &la, "SOL.dat");
 

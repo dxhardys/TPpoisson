@@ -84,6 +84,16 @@ void set_analytical_solution_DBC_1D(double* EX_SOL, double* X, int* la, double* 
 }  
 
 void set_grid_points_1D(double* x, int* la){
+  // cas d'erreur
+  if (x == NULL || la == NULL || *la <= 0) {
+    return;
+  }
+  int m = *la ;
+  double a = 1.0 /(1.0 * m+1);
+  for(int i = 0 ; i < m ; ++i){
+    x[i] = (i+1)* a ;
+  }
+
 }
 
 void write_GB_operator_rowMajor_poisson1D(double* AB, int* lab, int* la, char* filename){
