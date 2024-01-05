@@ -22,7 +22,7 @@ int main(int argc,char *argv[])
   int NRHS;
   int IMPLEM = 0;
   double T0, T1;
-  double *RHS, *EX_SOL, *X;
+  double *RHS, *EX_SOL, *X,*RHS_2;
   double **AAB;
   double *AB;
 
@@ -67,6 +67,17 @@ int main(int argc,char *argv[])
 
   printf("Solution with LAPACK\n");
   ipiv = (int *) calloc(la, sizeof(int));
+
+
+  // Using dgbmv
+  RHS_2 =(double *) malloc(sizeof(double)*la);
+  printf("DGBMV\n");
+  cblas_dgbmv(CblasColMajor,CblasNoTrans,la,la,kl,ku,1.0,AB+1,lab,EX_SOL,1,0.0,RHS_2,1);
+  write_vec(RHS_2, &la, "RHS_2.dat");
+
+  // Validation for dgbmv
+  relres = relative_forward_error(RHS,RHS_2, &la);
+  printf("The relative forward error for dgbmv is relres = %e\n",relres);
 
   /* LU Factorization */
   if (IMPLEM == TRF) {
