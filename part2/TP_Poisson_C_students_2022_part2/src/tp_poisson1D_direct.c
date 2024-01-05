@@ -22,7 +22,7 @@ int main(int argc,char *argv[])
   int NRHS;
   int IMPLEM = 0;
   double T0, T1;
-  double *RHS, *EX_SOL, *X,*RHS_2;
+  double *RHS, *EX_SOL, *X,*RHS_2, *RHS_3;
   double **AAB;
   double *AB;
 
@@ -82,6 +82,7 @@ int main(int argc,char *argv[])
   /* LU Factorization */
   if (IMPLEM == TRF) {
     dgbtrf_(&la, &la, &kl, &ku, AB, &lab, ipiv, &info);
+    write_GB_operator_colMajor_poisson1D(AB, &lab, &la, "data/LU_solution_exact.dat");
   }
 
   /* LU for tridiagonal matrix  (can replace dgbtrf_) */
@@ -92,7 +93,8 @@ int main(int argc,char *argv[])
   if (IMPLEM == TRI || IMPLEM == TRF){
     /* Solution (Triangular) */
     if (info==0){
-      dgbtrs_("N", &la, &kl, &ku, &NRHS, AB, &lab, ipiv, RHS, &la, &info);
+      dgbtrs_("N", &la, &kl, &ku, &NRHS, AB, &lab, ipiv, RHS_2, &la, &info);
+      write_vec(RHS_2, &la, "data/LU_solution.dat");
       if (info!=0){printf("\n INFO DGBTRS = %d\n",info);}
     }else{
       printf("\n INFO = %d\n",info);
@@ -101,7 +103,18 @@ int main(int argc,char *argv[])
 
   /* It can also be solved with dgbsv */
   if (IMPLEM == SV) {
-    // TODO : use dgbsv
+    RHS_3=(double *) malloc(sizeof(double)*la);
+    set_GB_operator_colMajor_poisson1D(AB, &lab, &la, &kv);
+    set_dense_RHS_DBC_1D(RHS_3,&la,&T0,&T1);
+    set_analytical_solution_DBC_1D(EX_SOL, X, &la, &T0, &T1);
+
+    dgbsv_(&la, &kl, &ku, &NRHS, AB, &lab, ipiv,RHS_3, &la, &info);
+    write_xy(RHS_3, X, &la, "data/SOL_direct.dat");
+
+    /* Relative forward error for dgbsv*/
+    relres = relative_forward_error(EX_SOL,RHS_3,&la);
+    printf("\nThe relative forward error for dgbsv is relres = %e\n",relres);
+
   }
 
   write_GB_operator_colMajor_poisson1D(AB, &lab, &la, "LU.dat");

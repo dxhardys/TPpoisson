@@ -82,5 +82,14 @@ int indexABCol(int i, int j, int *lab){
 }
 
 int dgbtrftridiag(int *la, int*n, int *kl, int *ku, double *AB, int *lab, int *ipiv, int *info){
+  double pivot = 0;
+
+  for (int i = 1; i < (*la); i++)
+  {
+    pivot = AB[i*(*lab)+1]*AB[(i-1)*(*lab)+3]; 
+    pivot /= AB[(i-1)*(*lab)+2]; 
+    AB[i*(*lab)+2] -= pivot; 
+    AB[(i-1)*(*lab)+3] /= AB[(i-1)*(*lab)+2];
+  }
   return *info;
 }
