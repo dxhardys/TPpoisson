@@ -25,6 +25,27 @@ double richardson_alpha_opt(int *la){
 }
 
 void richardson_alpha(double *AB, double *RHS, double *X, double *alpha_rich, int *lab, int *la,int *ku, int*kl, double *tol, int *maxit, double *resvec, int *nbite){
+  double *rhs_temp = malloc(sizeof(double)*(*la));
+  cblas_dcopy(*la,RHS,1,rhs_temp,1);
+
+  //  Initialiation de  r^0
+  cblas_dgbmv(CblasColMajor,CblasNoTrans,*la,*la,*kl,*ku,-1.0,AB,*lab,X,1,1.0,rhs_temp,1);
+
+  //  norme de rhs_temp
+  double check = cblas_dnrm2(*la,rhs_temp,1);
+  *nbite=0;
+  resvec[*nbite] = check;
+
+  while(check > (*tol) && *nbite < *maxit)
+  {
+    cblas_dcopy(*la,RHS,1,rhs_temp,1);
+    cblas_dgbmv(CblasColMajor,CblasNoTrans,*la,*la,*kl,*ku,-1.0,AB,*lab,X,1,1.0,rhs_temp,1);
+    cblas_daxpy(*la,(*alpha_rich),rhs_temp,1,X,1);
+    check = cblas_dnrm2(*la,rhs_temp,1);
+    (*nbite)++;
+    resvec[*nbite] = check;
+  }
+  free(rhs_temp);
 }
 
 void extract_MB_jacobi_tridiag(double *AB, double *MB, int *lab, int *la,int *ku, int*kl, int *kv){
