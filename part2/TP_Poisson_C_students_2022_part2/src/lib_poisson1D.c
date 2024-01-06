@@ -163,3 +163,24 @@ void poisson_1d_csc(int n, int** col_ptr, int** row_idx, double** values) {
 
     col_ptr_array[n] = index; 
 }
+
+void dcsrmv(int* row_ptr, int* col_idx, double* values, double* x, double* y, int n) {
+    for (int i = 0; i < n; ++i) {
+        y[i] = 0; 
+
+        for (int j = row_ptr[i]; j < row_ptr[i + 1]; ++j) {
+            y[i] += values[j] * x[col_idx[j]];
+        }
+    }
+}
+
+
+void dcscmv(int* col_ptr, int* row_idx, double* values, double* x, double* y, int n) {
+    for (int i = 0; i < n; ++i) {
+        y[i] = 0.0; 
+
+        for (int j = col_ptr[i]; j < col_ptr[i + 1]; ++j) {
+            y[row_idx[j]] += values[j] * x[i];
+        }
+    }
+}
