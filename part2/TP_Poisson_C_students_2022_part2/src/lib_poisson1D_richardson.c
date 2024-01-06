@@ -3,17 +3,20 @@
 /* Numerical library developed to solve 1D    */ 
 /* Poisson problem (Heat equation)            */
 /**********************************************/
+#include <math.h>
 #include "lib_poisson1D.h"
 
 void eig_poisson1D(double* eigval, int *la){
 }
 
 double eigmax_poisson1D(int *la){
-  return 0;
+  double max = sin(*la * M_PI_2 * (1.0 / (*la + 1)));
+  return 4 * max * max;
 }
 
 double eigmin_poisson1D(int *la){
-  return 0;
+  double min = sin(M_PI_2 * (1.0 / (*la + 1)));
+  return 4 * min * min;
 }
 
 double richardson_alpha_opt(int *la){
