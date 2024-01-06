@@ -93,3 +93,73 @@ int dgbtrftridiag(int *la, int*n, int *kl, int *ku, double *AB, int *lab, int *i
   }
   return *info;
 }
+
+void poisson_1d_csr(int n, int** row_ptr, int** col_idx, double** values) {
+    int nnz = 3 * n - 2; 
+    *row_ptr = (int*)malloc((n + 1) * sizeof(int));
+    *col_idx = (int*)malloc(nnz * sizeof(int));
+    *values = (double*)malloc(nnz * sizeof(double));
+
+    // Initialisation des pointeurs
+    int* row_ptr_array = *row_ptr;
+    int* col_idx_array = *col_idx;
+    double* values_array = *values;
+
+    int index = 0;
+    for (int i = 0; i < n; ++i) {
+        row_ptr_array[i] = index;
+
+        col_idx_array[index] = i;
+        values_array[index] = 2.0;
+        ++index;
+
+        if (i > 0) {
+            col_idx_array[index] = i - 1;
+            values_array[index] = -1.0;
+            ++index;
+        }
+
+        if (i < n - 1) {
+            col_idx_array[index] = i + 1;
+            values_array[index] = -1.0;
+            ++index;
+        }
+    }
+
+    row_ptr_array[n] = index;  
+}
+
+void poisson_1d_csc(int n, int** col_ptr, int** row_idx, double** values) {
+    int nnz = 3 * n - 2; 
+    *col_ptr = (int*)malloc((n + 1) * sizeof(int));
+    *row_idx = (int*)malloc(nnz * sizeof(int));
+    *values = (double*)malloc(nnz * sizeof(double));
+
+    int* col_ptr_array = *col_ptr;
+    int* row_idx_array = *row_idx;
+    double* values_array = *values;
+
+    // Remplissage des valeurs de la matrice de Poisson 1D
+    int index = 0;
+    for (int i = 0; i < n; ++i) {
+        col_ptr_array[i] = index;
+
+        row_idx_array[index] = i;
+        values_array[index] = 2.0;
+        ++index;
+
+        if (i > 0) {
+            row_idx_array[index] = i - 1;
+            values_array[index] = -1.0;
+            ++index;
+        }
+
+        if (i < n - 1) {
+            row_idx_array[index] = i + 1;
+            values_array[index] = -1.0;
+            ++index;
+        }
+    }
+
+    col_ptr_array[n] = index; 
+}
