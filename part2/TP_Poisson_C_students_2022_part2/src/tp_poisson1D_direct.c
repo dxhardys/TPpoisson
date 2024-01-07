@@ -22,7 +22,7 @@ int main(int argc,char *argv[])
   int NRHS;
   int IMPLEM = 0;
   double T0, T1;
-  double *RHS, *EX_SOL, *X,*RHS_2, *RHS_3;
+  double *RHS, *EX_SOL, *X,*RHS_2, *RHS_3, *EX_RHS, *RHS_4;
   double **AAB;
   double *AB;
 
@@ -79,11 +79,20 @@ int main(int argc,char *argv[])
   relres = relative_forward_error(RHS,RHS_2, &la);
   printf("The relative forward error for dgbmv is relres = %e\n",relres);
 
+
+
+
   /* LU Factorization */
-  if (IMPLEM == TRF) {
-    dgbtrf_(&la, &la, &kl, &ku, AB, &lab, ipiv, &info);
-    write_GB_operator_colMajor_poisson1D(AB, &lab, &la, "data/LU_solution_exact.dat");
-  }
+  
+  set_GB_operator_colMajor_poisson1D(AB, &lab, &la, &kv);
+  set_dense_RHS_DBC_1D(RHS_2,&la,&T0,&T1);
+  dgbtrf_(&la, &la, &kl, &ku, AB, &lab, ipiv, &info);
+  write_GB_operator_colMajor_poisson1D(AB, &lab, &la, "data/LU_solution_exact.dat");
+  /* Validation of LU for tridiagonal matrix (dgbtrf/dgbtrs) */
+  relres = relative_forward_error(EX_SOL,RHS_2, &la);
+  printf("\nThe relative forward error for dgbtrf/dgbtrs is relres = %e\n",relres);
+
+
 
   /* LU for tridiagonal matrix  (can replace dgbtrf_) */
   if (IMPLEM == TRI) {
@@ -96,11 +105,12 @@ int main(int argc,char *argv[])
       dgbtrs_("N", &la, &kl, &ku, &NRHS, AB, &lab, ipiv, RHS_2, &la, &info);
       write_vec(RHS_2, &la, "data/LU_solution.dat");
       if (info!=0){printf("\n INFO DGBTRS = %d\n",info);}
+
     }else{
       printf("\n INFO = %d\n",info);
     }
   }
-
+ 
   /* It can also be solved with dgbsv */
   if (IMPLEM == SV) {
     RHS_3=(double *) malloc(sizeof(double)*la);
@@ -111,14 +121,31 @@ int main(int argc,char *argv[])
     dgbsv_(&la, &kl, &ku, &NRHS, AB, &lab, ipiv,RHS_3, &la, &info);
     write_xy(RHS_3, X, &la, "data/SOL_direct.dat");
 
-    /* Relative forward error for dgbsv*/
+    // Relative forward error for dgbsv
     relres = relative_forward_error(EX_SOL,RHS_3,&la);
     printf("\nThe relative forward error for dgbsv is relres = %e\n",relres);
 
   }
+ 
 
   write_GB_operator_colMajor_poisson1D(AB, &lab, &la, "LU.dat");
   write_xy(RHS, X, &la, "SOL.dat");
+
+  /* LU for tridiagonal matrix  (can replace dgbtrf_) */
+  set_GB_operator_colMajor_poisson1D(AB, &lab, &la, &kv);
+  set_dense_RHS_DBC_1D(RHS_2,&la,&T0,&T1);
+  set_analytical_solution_DBC_1D(EX_SOL, X, &la, &T0, &T1);
+
+  ierr = dgbtrftridiag(&la, &la, &kl, &ku, AB, &lab, ipiv, &info);
+  /* Validation of our LU method for tridiagonal matrix */
+  relres = relative_forward_error(EX_SOL,RHS_2, &la);
+  printf("\nThe relative forward error for dgbtrftridiag is relres = %e\n",relres);
+
+
+
+
+
+
 
   /* Relative forward error */
   relres = relative_forward_error(RHS, EX_SOL, &la);

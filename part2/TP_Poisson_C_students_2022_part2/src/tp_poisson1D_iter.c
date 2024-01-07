@@ -78,7 +78,7 @@ int main(int argc,char *argv[])
 
   /* Computation of optimum alpha */
   opt_alpha = richardson_alpha_opt(&la);
-  printf("Optimal alpha for simple Richardson iteration is : %lf",opt_alpha); 
+  printf("Optimal alpha for simple Richardson iteration is : %lf \n",opt_alpha); 
 
   /* Solve */
   double tol=1e-3;
@@ -89,9 +89,10 @@ int main(int argc,char *argv[])
   resvec=(double *) calloc(maxit, sizeof(double));
 
   /* Solve with Richardson alpha */
-  if (IMPLEM == ALPHA) {
+  
     richardson_alpha(AB, RHS, SOL, &opt_alpha, &lab, &la, &ku, &kl, &tol, &maxit, resvec, &nbite);
-  }
+    printf("Number of iteration for richardson alpha = %d \n", nbite);
+  
 
   /* Richardson General Tridiag */
 
@@ -100,17 +101,29 @@ int main(int argc,char *argv[])
   ku = 1;
   kl = 1;
   MB = (double *) malloc(sizeof(double)*(lab)*la);
+  
   if (IMPLEM == JAC) {
     extract_MB_jacobi_tridiag(AB, MB, &lab, &la, &ku, &kl, &kv);
+    write_GB_operator_colMajor_poisson1D(MB, &lab, &la, "data/Jacobi/jac_01.dat");
+    write_vec(resvec, &nbite, "data/Jacobi/erreur_avant_jacobi.dat");
+    relres = relative_forward_error(EX_SOL,SOL, &la);
+    printf("The relative forward error for Jacobi is relres = %e\n",relres);
+
   } else if (IMPLEM == GS) {
     extract_MB_gauss_seidel_tridiag(AB, MB, &lab, &la, &ku, &kl, &kv);
+    write_GB_operator_colMajor_poisson1D(MB, &lab, &la, "data/GS/gs_01.dat");
+    write_vec(resvec, &nbite, "data/GS/erreur_avant_gs.dat");
+    relres = relative_forward_error(EX_SOL,SOL, &la);
+    printf("The relative forward error for Jacobi is relres = %e\n",relres);
   }
 
   /* Solve with General Richardson */
-  if (IMPLEM == JAC || IMPLEM == GS) {
+ 
     write_GB_operator_colMajor_poisson1D(MB, &lab, &la, "MB.dat");
     richardson_MB(AB, RHS, SOL, MB, &lab, &la, &ku, &kl, &tol, &maxit, resvec, &nbite);
-  }
+    write_vec(resvec, &nbite, "data/Richardson/erreur_avant_rich.dat");
+    relres = relative_forward_error(EX_SOL,SOL, &la);
+    printf("The relative forward error for Richardson is relres = %e\n",relres);
 
   /* Write solution */
   write_vec(SOL, &la, "SOL.dat");
