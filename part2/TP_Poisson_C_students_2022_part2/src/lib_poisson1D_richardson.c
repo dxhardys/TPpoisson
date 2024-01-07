@@ -74,5 +74,32 @@ void extract_MB_gauss_seidel_tridiag(double *AB, double *MB, int *lab, int *la,i
 }
 
 void richardson_MB(double *AB, double *RHS, double *X, double *MB, int *lab, int *la,int *ku, int*kl, double *tol, int *maxit, double *resvec, int *nbite){
+
+  double *rhs_tmp = malloc(sizeof(double)*(*la));
+  cblas_dcopy(*la,RHS,1,rhs_tmp,1);
+  //  Initialisation de r^0
+  cblas_dgbmv(CblasColMajor,CblasNoTrans,*la,*la,*kl,*ku,-1.0,AB,*lab,X,1,1.0,rhs_tmp,1);
+  int info; int NHRS = 1;
+  int *ipiv = (int *)calloc(*la, sizeof(int));
+  int m = (*ku)-1;
+  dgbtrf_(la,la,kl,&m,MB,lab,ipiv,&info);
+  //  Norme de rhs_tmp
+  double check = cblas_dnrm2(*la,rhs_tmp,1);
+  *nbite=0;
+  resvec[*nbite] = check;
+  
+  while((check > (*tol)) && ((*nbite) < (*maxit)))
+  {
+    cblas_dcopy(*la,RHS,1,rhs_tmp,1);
+    cblas_dgbmv(CblasColMajor,CblasNoTrans,*la,*la,*kl,*ku,-1.0,AB,*lab,X,1,1.0,rhs_tmp,1);
+    // Résolution du système
+    dgbtrs_("N",la,kl,&m,&NHRS,MB,lab,ipiv,rhs_tmp,la,&info,*la);
+    // Mise à jour de la solution X
+    cblas_daxpy(*la,1.0,rhs_tmp,1,X,1);
+    //calcul de la nouvel norme 
+    check = cblas_dnrm2(*la,rhs_tmp,1);
+    (*nbite)++;
+    resvec[*nbite] = check;
+  }
 }
 
