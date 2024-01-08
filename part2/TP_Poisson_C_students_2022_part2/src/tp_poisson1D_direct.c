@@ -3,6 +3,7 @@
 /* This file contains the main function   */
 /* to solve the Poisson 1D problem        */
 /******************************************/
+#include <time.h>
 #include "lib_poisson1D.h"
 
 #define TRF 0
@@ -151,6 +152,59 @@ int main(int argc,char *argv[])
   relres = relative_forward_error(RHS, EX_SOL, &la);
   
   printf("\nThe relative forward error is relres = %e\n",relres);
+
+
+  clock_t top;
+  
+  FILE *direct = fopen("complx/direct.dat", "w");
+  FILE *dgbtrf = fopen("complx/dgbtrf.dat", "w");
+
+ 
+
+  for(int i = 100; i < 10000; i += 100)
+  {
+    // dgbtrftridiag only
+    set_GB_operator_colMajor_poisson1D(AB, &lab, &la, &kv);
+    set_dense_RHS_DBC_1D(EX_RHS,&la,&T0,&T1);
+    top = clock();
+    dgbtrftridiag(&la, &la, &kl, &ku, AB, &lab, ipiv, &info);
+    fprintf(dgbtrf, "%f ",((double)(clock() - top)/CLOCKS_PER_SEC));
+
+    // dgbtrf only
+    set_GB_operator_colMajor_poisson1D(AB, &lab, &la, &kv);
+    set_dense_RHS_DBC_1D(EX_RHS,&la,&T0,&T1);
+    top = clock();
+    dgbtrf_(&la, &la, &kl, &ku, AB, &lab, ipiv, &info);
+    fprintf(dgbtrf, "%f\n",((double)(clock() - top)/CLOCKS_PER_SEC));
+
+    // dgbtrftridiag with dgbtrs
+    set_GB_operator_colMajor_poisson1D(AB, &lab, &la, &kv);
+    set_dense_RHS_DBC_1D(EX_RHS,&la,&T0,&T1);
+    top = clock();
+    dgbtrftridiag(&la, &la, &kl, &ku, AB, &lab, ipiv, &info);
+    dgbtrs_("N", &la, &kl, &ku, &NRHS, AB, &lab, ipiv, EX_RHS, &la, &info, la);    
+    fprintf(direct, "%f ",((double)(clock() - top)/CLOCKS_PER_SEC));
+    set_analytical_solution_DBC_1D(EX_SOL, X, &la, &T0, &T1);
+   
+    // dgbtrf with dgbtrs
+    set_GB_operator_colMajor_poisson1D(AB, &lab, &la, &kv);
+    set_dense_RHS_DBC_1D(EX_RHS,&la,&T0,&T1);
+    top = clock();
+    dgbtrf_(&la, &la, &kl, &ku, AB, &lab, ipiv, &info);
+    dgbtrs_("N", &la, &kl, &ku, &NRHS, AB, &lab, ipiv, EX_RHS, &la, &info, la);    
+    fprintf(direct, "%f ",((double)(clock() - top)/CLOCKS_PER_SEC));
+    set_analytical_solution_DBC_1D(EX_SOL, X, &la, &T0, &T1);
+
+    // dgbsv only
+    set_GB_operator_colMajor_poisson1D(AB, &lab, &la, &kv);
+    set_dense_RHS_DBC_1D(EX_RHS,&la,&T0,&T1);
+    top = clock();
+    dgbsv_(&la, &kl, &ku, &NRHS, AB, &lab, ipiv, EX_RHS, &la, &info);
+    fprintf(direct, "%f\n",((double)(clock() - top)/CLOCKS_PER_SEC));
+    set_analytical_solution_DBC_1D(EX_SOL, X, &la, &T0, &T1);
+
+  }
+
 
   free(RHS);
   free(EX_SOL);
